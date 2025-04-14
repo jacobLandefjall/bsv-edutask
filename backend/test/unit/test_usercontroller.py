@@ -8,7 +8,7 @@ import pytest
 from src.controllers.usercontroller import UserController
 from unittest.mock import MagicMock
 
-@pytest.fixture # Fixture to create a mock DAO
+@pytest.fixture # Fixture: Think of preparing specific records in the database.
 def mock_dao():
     return MagicMock()
 
@@ -47,9 +47,8 @@ def test_user_not_found(controller, mock_dao):
     """
     mock_dao.find.return_value = [] # mock to return an empty list.
 
-    result = controller.get_user_by_email("missing@student.bth.se")
-
-    assert result == None # Check if the result is None.
+    with pytest.raises(IndexError): # IndexError due to users being empty.
+        controller.get_user_by_email("missing@student.bth.se")
 
 def test_invalid_email(controller):
     """
@@ -57,6 +56,13 @@ def test_invalid_email(controller):
     """
     with pytest.raises(ValueError):
         controller.get_user_by_email("invalidemail")
+
+def test_empty_email(controller):
+    """
+    Test function to check if an empty email results in an error.
+    """
+    with pytest.raises(ValueError):
+        controller.get_user_by_email("")
 
 def test_minimal_valid_email(controller, mock_dao):
     """
@@ -71,7 +77,7 @@ def test_minimal_valid_email(controller, mock_dao):
 
 def test_database_exceptions(controller, mock_dao):
     """
-    Test function to check if the database exceptions are handled.
+    Test function to dcheck if the database exceptions are handled.
     """
     mock_dao.find.side_effect = Exception("Database error") # mock to raise an exception.
 
@@ -79,3 +85,24 @@ def test_database_exceptions(controller, mock_dao):
         controller.get_user_by_email("tryuser@student.bth.se")
 
     assert "Database error" in str(exc_info.value)
+
+def test_update_user_success(controller, mock_dao):
+    """
+    Test function to check if the user is updated successfully.
+    """
+    mock_dao.update.return_value = {"matched_count": 1, "modified_count": 1}
+
+    result = controller.update("123", {"name": "Updated Name"})
+
+    assert result["modified_count"] == 1
+
+def test_update_user_failure(controller, mock_dao):
+    """
+    Test function to check if the user update fails.
+    """
+    mock_dao.update.side_effect = Exception("Update failed")
+
+    with pytest.raises(Exception) as exc_info:
+        controller.update("123", {"name": "Failed Update"})
+
+    assert "Update failed" in str(exc_info.value)
