@@ -2,6 +2,8 @@
 Assignment 2:
 An implementation of test cases using Pytest
 Lich23 and jalf23
+Tests are Designed According to Ground Truth (Docstring)
+Designed tests around the expected behavior outlined in the docstring.
 """
 
 import pytest

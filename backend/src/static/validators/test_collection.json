@@ -1,0 +1,41 @@
+{
+    "$jsonSchema": {
+        "bsonType": "object",
+        "required": ["title", "description", "startdate", "duedate"],
+        "properties": {
+            "title": {
+                "bsonType": "string"
+            },
+            "description": {
+                "bsonType": "string"
+            },
+            "startdate": {
+                "bsonType": "date"
+            },
+            "duedate": {
+                "bsonType": "date"
+            },
+            "requires": {
+                "bsonType": "array",
+                "items": {
+                    "bsonType": "objectId"
+                }
+            },
+            "categories": {
+                "bsonType": "array",
+                "items": {
+                    "bsonType": "string"
+                }
+            },
+            "todos": {
+                "bsonType": "array",
+                "items": {
+                    "bsonType": "objectId"
+                }
+            },
+            "video": {
+                "bsonType": "objectId"
+            }
+        }
+    }
+}
