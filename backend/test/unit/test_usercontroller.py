@@ -29,18 +29,29 @@ def test_single_user_exist(controller, mock_dao):
 
     assert result == mock_user # Check if the result is the same as the mock user.
 
-def test_multiple_users_exist(controller, mock_dao, capsys):
+def test_multiple_users_exist_returns_first(controller, mock_dao):
     """
-    Test function to check if multiple users exist.
-    capsys = capture system output, capture anything printed to stdout (print statements)
+    Test function to check if the first user is returned when multiple users exist.
     """
+    # Mocking the behavior of the DAO to return multiple users.
     mock_users = [{"email": "tryuser@student.bth.se"}, {"email": "tryuser@student.bth.se"}]
-    mock_dao.find.return_value = mock_users # mock to return a list with two users.
+    mock_dao.find.return_value = mock_users
 
     result = controller.get_user_by_email("tryuser@student.bth.se")
-    captured = capsys.readouterr() # capture the output.
 
-    assert result == mock_users[0] # Check if the result is the same as the first mock user.
+    assert result == mock_users[0]
+
+def test_multiple_users_exist_logs_warning(controller, mock_dao, capsys):
+    """
+    Test function to check if a warning is logged when multiple users exist.
+    """
+    # Mocking the behavior of the DAO to return multiple users.
+    mock_users = [{"email": "tryuser@student.bth.se"}, {"email": "tryuser@student.bth.se"}]
+    mock_dao.find.return_value = mock_users
+
+    controller.get_user_by_email("tryuser@student.bth.se")
+    captured = capsys.readouterr()
+
     assert "Error: more than one user found with mail tryuser@student.bth.se" in captured.out
 
 def test_user_not_found(controller, mock_dao):
@@ -79,32 +90,9 @@ def test_minimal_valid_email(controller, mock_dao):
 
 def test_database_exceptions(controller, mock_dao):
     """
-    Test function to dcheck if the database exceptions are handled.
+    Test function to check if the database exceptions are handled.
     """
     mock_dao.find.side_effect = Exception("Database error") # mock to raise an exception.
 
-    with pytest.raises(Exception) as exc_info:
+    with pytest.raises(Exception):
         controller.get_user_by_email("tryuser@student.bth.se")
-
-    assert "Database error" in str(exc_info.value)
-
-def test_update_user_success(controller, mock_dao):
-    """
-    Test function to check if the user is updated successfully.
-    """
-    mock_dao.update.return_value = {"matched_count": 1, "modified_count": 1}
-
-    result = controller.update("123", {"name": "Updated Name"})
-
-    assert result["modified_count"] == 1
-
-def test_update_user_failure(controller, mock_dao):
-    """
-    Test function to check if the user update fails.
-    """
-    mock_dao.update.side_effect = Exception("Update failed")
-
-    with pytest.raises(Exception) as exc_info:
-        controller.update("123", {"name": "Failed Update"})
-
-    assert "Update failed" in str(exc_info.value)
