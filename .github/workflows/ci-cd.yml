@@ -1,0 +1,28 @@
+name: Run all backend unit tests
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'  # Our local version
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.pip
+
+      - name: Run unit tests (Only demo and unit folders)
+        run: |
+          pytest backend/test/demo backend/test/unit
