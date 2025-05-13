@@ -11,20 +11,24 @@ from pymongo import MongoClient
 from bson import ObjectId
 import os
 from datetime import datetime
+from bson import datetime as bson_datetime
 
-def test_validator():
+
+def get_test_validator():
     """
     Validator function to define the schema for the MongoDB collection.
     """
     return {
         "$jsonSchema": {
             "bsonType": "object",
-            "required": ["title", "description", "startdate", "duedate"],
+            "required": ["title", "description", "startdate", "duedate", "sensor_time", "card_type"],
             "properties": {
                 "title": {"bsonType": "string"},
                 "description": {"bsonType": "string"},
                 "startdate": {"bsonType": "date"},
-                "duedate": {"bsonType": "date"}
+                "duedate": {"bsonType": "date"},
+                "sensor_time": {"bsonType": "string"},
+                "card_type": {"bsonType": "string"}
             }
         }
     }
@@ -40,9 +44,9 @@ def dao_test_collection():
     - Yields a DAO instance for isolated testing.
     - Cleans up afterward by dropping the collection.
     """
-    test_db_name = "test_db"
+    test_db_name = "rootDb"
     test_collection_name = "test_collection"
-    mongo_url = "mongodb://root:root@mongodb:27017"
+    mongo_url = "mongodb://root:root@mongodb:27017/rootDb?authSource=admin"
 
     # Connect to MongoDB
     client = pymongo.MongoClient(mongo_url)
@@ -57,7 +61,7 @@ def dao_test_collection():
     # Use validator for the collection
     test_db.create_collection(
         test_collection_name,
-        validator=test_validator()
+        validator=get_test_validator()
     )
     dao = DAO(test_collection_name)
 
@@ -65,6 +69,7 @@ def dao_test_collection():
 
     # Teardown: Drop the test collection and database
     test_db.drop_collection(test_collection_name)
+
 
 def test_create_valid_document(dao_test_collection):
     """
@@ -77,16 +82,15 @@ def test_create_valid_document(dao_test_collection):
         "description": "A test document",
         "startdate": datetime(2025, 4, 22),
         "duedate": datetime(2025, 4, 25),
-        "requires": [ObjectId()],
-        "categories": ["work", "urgent"],
-        "todos": [ObjectId()],
-        "video": ObjectId()
+        "sensor_time": "08:00",
+        "card_type": "silver"
     }
 
     result = dao_test_collection.create(valid_data)
     assert "_id" in result
     assert result["title"] == "Test Document"
     assert result["description"] == "A test document"
+
 
 def test_create_invalid_document(dao_test_collection):
     """
@@ -96,9 +100,9 @@ def test_create_invalid_document(dao_test_collection):
     """
     invalid_data = {
         "title": "Valid Title", 
-        "description": "Valid description", 
+        "description": "Valid description",
         "startdate": 12345,  # Invalid type (should be a string or date)
-        "duedate": "2025-04-25T00:00:00", 
+        "duedate": "2025-04-25T00:00:00",
         "requires": [ObjectId()],
         "categories": ["work", "urgent"],
         "todos": [ObjectId()],
@@ -118,12 +122,13 @@ def test_create_missing_required_field(dao_test_collection):
     invalid_data = {
         "title": 12345,  # Invalid type for title
         # Missing required field 'description'
-        "startdate": "2025-04-22T00:00:00",
-        "duedate": "2025-04-25T00:00:00"
+        "startdate": datetime(2025, 4, 22),
+        "duedate": datetime(2025, 4, 25)
     }
 
     with pytest.raises(WriteError):
         dao_test_collection.create(invalid_data)
+
 
 def test_create_wrong_data_type(dao_test_collection):
     """
@@ -134,8 +139,8 @@ def test_create_wrong_data_type(dao_test_collection):
     invalid_data = {
         "title": 12345,  # Invalid type for title
         "description": "A test task description",
-        "startdate": "2025-04-22T00:00:00",  # Correct data type
-        "duedate": "Invalid date",  # Wrong data type (should be a date)
+        "startdate": "2025-04-22T00:00:00",
+        "duedate": "2025-04-25T00:00:00",
         "requires": [ObjectId()],
         "categories": ["work", "urgent"],
         "todos": [ObjectId()],
@@ -144,6 +149,7 @@ def test_create_wrong_data_type(dao_test_collection):
 
     with pytest.raises(WriteError):
         dao_test_collection.create(invalid_data)
+
 
 def test_create_with_high_value(dao_test_collection):
     """
@@ -155,7 +161,7 @@ def test_create_with_high_value(dao_test_collection):
         "title": "High Value Document",
         "description": "A document with high value",
         "startdate": datetime(2025, 4, 22),
-        "duedate": datetime(2025, 4, 22),
+        "duedate": datetime(2025, 4, 25),
         "requires": [ObjectId()],
         "categories": ["work", "urgent"],
         "todos": [ObjectId()],
@@ -176,13 +182,10 @@ def test_create_with_invalid_sensor_time(dao_test_collection):
     invalid_sensor_time_data = {
         "title": "Sensor Time Document",
         "description": "A document with an invalid sensor time",
-        "startdate": datetime(2025, 4, 22),
-        "duedate": datetime(2025, 4, 22),
-        "requires": [ObjectId()],
-        "categories": ["work", "urgent"],
-        "todos": [ObjectId()],
-        "video": ObjectId(),
-        "sensor_time": "invalid"  # Invalid sensor time data
+        "startdate": "2025-04-22T00:00:00",
+        "duedate": "2025-04-22T00:00:00",
+        "sensor_time": 123,
+        "card_type": "gold"
     }
 
     with pytest.raises(WriteError):
@@ -198,8 +201,8 @@ def test_create_missing_card_condition(dao_test_collection):
     missing_card_condition_data = {
         "title": "Card Condition Document",
         "description": "A document missing the card condition",
-        "startdate": datetime(2025, 4, 22),
-        "duedate": datetime(2025, 4, 22),
+        "startdate": "2025-04-22T00:00:00",
+        "duedate": "2025-04-25T00:00:00",
         "requires": [ObjectId()],
         "categories": ["work", "urgent"],
         "todos": [ObjectId()],
@@ -209,3 +212,20 @@ def test_create_missing_card_condition(dao_test_collection):
 
     with pytest.raises(WriteError):
         dao_test_collection.create(missing_card_condition_data)
+
+
+def test_create_invalid_card_and_sensor(dao_test_collection):
+    """
+    condition of the company card and how long the card is held to sensor.
+    """
+    invalid_data = {
+        "title": "Invalid combo",
+        "description": "Invalid sensor and card",
+        "startdate": "2025-04-22T00:00:00",
+        "duedate": "2025-04-25T00:00:00",
+        "sensor_time": "invalid",
+        "card_type": None
+    }
+
+    with pytest.raises(WriteError):
+        dao_test_collection.create(invalid_data)
