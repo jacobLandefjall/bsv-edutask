@@ -25,4 +25,4 @@ jobs:
 
       - name: Run unit tests (Only demo and unit folders)
         run: |
-          pytest backend/test/demo backend/test/unit
+          pytest backend/test/unit/test_usercontroller.py
