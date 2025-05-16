@@ -1,6 +1,9 @@
 name: Run all backend unit tests
 
 on:
+  push:
+    branches:
+      - test-usercontroller
   pull_request:
     branches:
       - master
@@ -16,7 +19,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.12'  # Our local version
+          python-version: '3.12' # Our local version
 
       - name: Install dependencies
         run: |
