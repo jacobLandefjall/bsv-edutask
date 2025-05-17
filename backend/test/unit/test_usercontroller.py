@@ -5,6 +5,7 @@ Lich23 and jalf23
 Tests are Designed According to Ground Truth (Docstring)
 Designed tests around the expected behavior outlined in the docstring.
 """
+# Added a dummy comment to trigger CI
 
 import pytest
 from src.controllers.usercontroller import UserController
