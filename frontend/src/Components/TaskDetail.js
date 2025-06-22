@@ -87,7 +87,7 @@ function TaskDetail({ taskid, updateTasks }) {
      * @param {*} todo Todo object which is deleted
      */
     const deleteTodo = (todo) => {
-        fetch(`http://localhost:5000/todos/byid/${todo._id}`, {
+        fetch(`http://localhost:5001/todos/byid/${todo._id}`, {
             method: 'delete',
             headers: { 'Cache-Control': 'no-cache' }
         })
