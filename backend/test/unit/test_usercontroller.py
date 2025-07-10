@@ -5,6 +5,7 @@ Lich23 and jalf23
 Tests are Designed According to Ground Truth (Docstring)
 Designed tests around the expected behavior outlined in the docstring.
 """
+# Added a dummy comment to trigger CI
 
 import pytest
 from src.controllers.usercontroller import UserController
@@ -57,15 +58,29 @@ def test_multiple_users_exist_logs_warning(controller, mock_dao, capsys):
 def test_user_not_found(controller, mock_dao):
     """
     Test function to check if the user is not found.
+    Raises:
+    IndexError: Occurs because the DAO returns an empty list.
     """
     mock_dao.find.return_value = [] # mock to return an empty list.
 
     with pytest.raises(IndexError): # IndexError due to users being empty.
         controller.get_user_by_email("missing@student.bth.se")
 
+def test_user_data_is_none(controller, mock_dao):
+    """
+    Test when the DAO returns a list containing None.
+    Should raise a TypeError or similar because a valid user object is expected.
+    """
+    mock_dao.find.return_value = [None]
+
+    with pytest.raises(TypeError):
+        controller.get_user_by_email("tryuser@student.bth.se")
+
 def test_invalid_email(controller):
     """
     Test function to check if the email is invalid.
+    Raises:
+    ValueError: Raised by the method when the input email does not match a valid email format.
     """
     with pytest.raises(ValueError):
         controller.get_user_by_email("invalidemail")
