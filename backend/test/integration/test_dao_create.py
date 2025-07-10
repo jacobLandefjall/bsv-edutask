@@ -1,6 +1,27 @@
 """
 Design and implement integration tests for the communication between the data access object DAO
 (backend/src/util/dao.py) and the Mongo database focusing on the create method. 
+Test Strategy: EP and BVA
+
+sensor_time:
+- Valid: "HH:MM" format string
+- Invalid: int, None, wrong format
+
+value:
+- Valid: 0–120
+- BVA: 120 (valid), 121/130 (invalid)
+
+card_type:
+- Valid: known strings
+- Invalid: None, invalid string
+
+dates (startdate, duedate):
+- Valid: valid ISO date
+- Invalid: string, empty, or missing
+
+description:
+- Valid: non-empty string
+- Invalid: empty or None
 """
 
 import pytest
